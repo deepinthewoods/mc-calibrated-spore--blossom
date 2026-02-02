@@ -29,6 +29,10 @@ public class CalibratedSporeBlossomBlock extends DirectionalBlock {
     public static final IntegerProperty PARTICLE_TYPE = IntegerProperty.create("particle_type", 0, ParticleTypeRegistry.COUNT - 1);
     public static final IntegerProperty POWER = IntegerProperty.create("power", 0, 15);
 
+    // Particle density target: approximates basalt delta ambient density.
+    // Volume = lateralSize^2 * facingSize; count = density * volume.
+    private static final double PARTICLE_DENSITY = 0.001;
+
     public CalibratedSporeBlossomBlock(Properties properties) {
         super(properties);
         this.registerDefaultState(
@@ -121,7 +125,8 @@ public class CalibratedSporeBlossomBlock extends DirectionalBlock {
         // Power 0 = 1x1x1, power 1 = 5x5x3, ..., power 15 = 61x61x31
         double lateralSize = 1 + 4 * power;
         double facingSize = 1 + 2 * power;
-        int count = Math.max(1, power);
+        double volume = lateralSize * lateralSize * facingSize;
+        int count = Math.max(1, (int) (PARTICLE_DENSITY * volume));
 
         double cx = pos.getX() + 0.5;
         double cy = pos.getY() + 0.5;
