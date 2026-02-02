@@ -1,0 +1,78 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "sculk": "minecraft:block/sculk",
+    "base": "minecraft:block/spore_blossom_base",
+    "flower": "minecraft:block/spore_blossom",
+    "particle": "minecraft:block/sculk"
+  },
+  "elements": [
+    {
+      "comment": "sculk_slab",
+      "from": [0, 0, 0],
+      "to": [16, 8, 16],
+      "faces": {
+        "down":  { "texture": "#sculk", "cullface": "down" },
+        "up":    { "texture": "#sculk" },
+        "north": { "texture": "#sculk", "cullface": "north" },
+        "south": { "texture": "#sculk", "cullface": "south" },
+        "east":  { "texture": "#sculk", "cullface": "east" },
+        "west":  { "texture": "#sculk", "cullface": "west" }
+      }
+    },
+    {
+      "comment": "spore_base_plate",
+      "from": [1, 8, 1],
+      "to": [15, 8.1, 15],
+      "shade": false,
+      "faces": {
+        "up":   { "uv": [1, 1, 15, 15], "texture": "#base" },
+        "down": { "uv": [1, 1, 15, 15], "texture": "#base" }
+      }
+    },
+    {
+      "comment": "petal_east",
+      "from": [8, 8.1, 0],
+      "to": [24, 8.1, 16],
+      "rotation": { "origin": [8, 8, 0], "axis": "z", "angle": 22.5, "rescale": false },
+      "shade": false,
+      "faces": {
+        "up":   { "uv": [0, 0, 16, 16], "texture": "#flower", "rotation": 90 },
+        "down": { "uv": [0, 16, 16, 0], "texture": "#flower", "rotation": 270 }
+      }
+    },
+    {
+      "comment": "petal_west",
+      "from": [-8, 8.1, 0],
+      "to": [8, 8.1, 16],
+      "rotation": { "origin": [8, 8, 0], "axis": "z", "angle": -22.5, "rescale": false },
+      "shade": false,
+      "faces": {
+        "up":   { "uv": [0, 0, 16, 16], "texture": "#flower", "rotation": 270 },
+        "down": { "uv": [0, 16, 16, 0], "texture": "#flower", "rotation": 90 }
+      }
+    },
+    {
+      "comment": "petal_south",
+      "from": [0, 8.1, 8],
+      "to": [16, 8.1, 24],
+      "rotation": { "origin": [0, 8, 8], "axis": "x", "angle": -22.5, "rescale": false },
+      "shade": false,
+      "faces": {
+        "up":   { "uv": [16, 16, 0, 0], "texture": "#flower" },
+        "down": { "uv": [16, 0, 0, 16], "texture": "#flower" }
+      }
+    },
+    {
+      "comment": "petal_north",
+      "from": [0, 8.1, -8],
+      "to": [16, 8.1, 8],
+      "rotation": { "origin": [0, 8, 8], "axis": "x", "angle": 22.5, "rescale": false },
+      "shade": false,
+      "faces": {
+        "up":   { "uv": [0, 0, 16, 16], "texture": "#flower" },
+        "down": { "uv": [0, 16, 16, 0], "texture": "#flower" }
+      }
+    }
+  ]
+}

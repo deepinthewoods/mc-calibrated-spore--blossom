@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "SSS",
+    "SCS",
+    "SSS"
+  ],
+  "key": {
+    "S": { "item": "minecraft:sculk" },
+    "C": { "item": "calibrated-spore-blossom:calibrated_spore_blossom" }
+  },
+  "result": {
+    "id": "calibrated-spore-blossom:advanced_calibrated_spore_blossom",
+    "count": 1
+  }
+}
