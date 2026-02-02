@@ -1,0 +1,59 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "amethyst": "minecraft:block/amethyst_block",
+    "spore_base": "minecraft:block/spore_blossom_base",
+    "spore": "minecraft:block/spore_blossom",
+    "particle": "minecraft:block/amethyst_block"
+  },
+  "elements": [
+    {
+      "name": "amethyst_slab",
+      "from": [0, 0, 0],
+      "to": [16, 8, 16],
+      "faces": {
+        "down":  { "texture": "#amethyst", "cullface": "down" },
+        "up":    { "texture": "#amethyst" },
+        "north": { "texture": "#amethyst", "cullface": "north" },
+        "south": { "texture": "#amethyst", "cullface": "south" },
+        "east":  { "texture": "#amethyst", "cullface": "east" },
+        "west":  { "texture": "#amethyst", "cullface": "west" }
+      }
+    },
+    {
+      "name": "spore_base_plate",
+      "from": [0, 8, 0],
+      "to": [16, 9, 16],
+      "faces": {
+        "down":  { "texture": "#spore_base" },
+        "up":    { "texture": "#spore_base" },
+        "north": { "texture": "#spore_base" },
+        "south": { "texture": "#spore_base" },
+        "east":  { "texture": "#spore_base" },
+        "west":  { "texture": "#spore_base" }
+      }
+    },
+    {
+      "name": "spore_cross_1",
+      "from": [0.8, 8, 8],
+      "to": [15.2, 16, 8],
+      "rotation": { "origin": [8, 8, 8], "axis": "y", "angle": 45, "rescale": true },
+      "shade": false,
+      "faces": {
+        "north": { "texture": "#spore", "uv": [0, 0, 16, 8] },
+        "south": { "texture": "#spore", "uv": [0, 0, 16, 8] }
+      }
+    },
+    {
+      "name": "spore_cross_2",
+      "from": [0.8, 8, 8],
+      "to": [15.2, 16, 8],
+      "rotation": { "origin": [8, 8, 8], "axis": "y", "angle": -45, "rescale": true },
+      "shade": false,
+      "faces": {
+        "north": { "texture": "#spore", "uv": [0, 0, 16, 8] },
+        "south": { "texture": "#spore", "uv": [0, 0, 16, 8] }
+      }
+    }
+  ]
+}

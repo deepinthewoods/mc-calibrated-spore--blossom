@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:amethyst_block" },
+    { "item": "minecraft:spore_blossom" }
+  ],
+  "result": {
+    "id": "calibrated-spore-blossom:calibrated_spore_blossom",
+    "count": 1
+  }
+}
