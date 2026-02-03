@@ -1,15 +1,18 @@
 package ninja.trek.calibratedsporeblossom.particle;
 
+import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.particles.PowerParticleOption;
+import net.minecraft.world.level.block.Blocks;
 
 import java.util.List;
 
 public final class ParticleTypeRegistry {
 
-    public static final int COUNT = 45;
+    public static final int COUNT = 46;
+    public static final int BLOCK_PARTICLE_INDEX = 45;
 
     public record Entry(String displayName, ParticleOptions... particles) {}
 
@@ -76,7 +79,8 @@ public final class ParticleTypeRegistry {
         /* 41 */ new Entry("Falling Nectar", ParticleTypes.FALLING_NECTAR),
         /* 42 */ new Entry("Dragon Breath", PowerParticleOption.create(ParticleTypes.DRAGON_BREATH, 1.0f)),
         /* 43 */ new Entry("Nautilus", ParticleTypes.NAUTILUS),
-        /* 44 */ new Entry("Dust Plume", ParticleTypes.DUST_PLUME)
+        /* 44 */ new Entry("Dust Plume", ParticleTypes.DUST_PLUME),
+        /* 45 */ new Entry("Block", new BlockParticleOption(ParticleTypes.BLOCK, Blocks.STONE.defaultBlockState()))
     );
 
     public static Entry get(int index) {

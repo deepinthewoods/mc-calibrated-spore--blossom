@@ -12,6 +12,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+import ninja.trek.calibratedsporeblossom.particle.ParticleTypeRegistry;
 import ninja.trek.calibratedsporeblossom.registry.ModBlockEntities;
 
 public class AdvancedSporeBlossomBlockEntity extends BlockEntity implements Nameable {
@@ -68,9 +69,6 @@ public class AdvancedSporeBlossomBlockEntity extends BlockEntity implements Name
     private float randomness = 1.0f;
     private float animationSpeed = 1.0f;
 
-    // Pulse tick counter (not saved)
-    private int pulseTick = 0;
-
     public AdvancedSporeBlossomBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.ADVANCED_SPORE_BLOSSOM_BE, pos, state);
     }
@@ -98,10 +96,8 @@ public class AdvancedSporeBlossomBlockEntity extends BlockEntity implements Name
     public float getParticleScale() { return particleScale; }
     public float getRandomness() { return randomness; }
     public float getAnimationSpeed() { return animationSpeed; }
-    public int getPulseTick() { return pulseTick; }
-
     // --- Setters ---
-    public void setParticleType(int v) { particleType = Math.clamp(v, 0, 44); setChanged(); }
+    public void setParticleType(int v) { particleType = Math.clamp(v, 0, ParticleTypeRegistry.COUNT - 1); setChanged(); }
     public void setDensity(float v) { density = Math.clamp(v, 0.0f, 0.05f); setChanged(); }
     public void setXRadius(int v) { xRadius = Math.clamp(v, 1, 64); setChanged(); }
     public void setYRadius(int v) { yRadius = Math.clamp(v, 1, 64); setChanged(); }
@@ -123,21 +119,6 @@ public class AdvancedSporeBlossomBlockEntity extends BlockEntity implements Name
     public void setParticleScale(float v) { particleScale = Math.clamp(v, 0.1f, 5.0f); setChanged(); }
     public void setRandomness(float v) { randomness = Math.clamp(v, 0.0f, 1.0f); setChanged(); }
     public void setAnimationSpeed(float v) { animationSpeed = Math.clamp(v, 0.1f, 5.0f); setChanged(); }
-
-    public void incrementPulseTick() {
-        pulseTick++;
-        if (pulseTick >= pulseInterval) {
-            pulseTick = 0;
-        }
-    }
-
-    /**
-     * Returns true if particles should emit this tick (continuous or within pulse window).
-     */
-    public boolean shouldEmit() {
-        if (pulseMode == 0) return true;
-        return pulseTick < pulseDuration;
-    }
 
     // --- Int-encoded access for ContainerData ---
 

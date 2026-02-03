@@ -4,8 +4,10 @@ import com.mojang.serialization.MapCodec;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.particles.BlockParticleOption;
+import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleOptions;
-import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
@@ -16,6 +18,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.RenderShape;
@@ -43,6 +46,10 @@ public class AdvancedCalibratedSporeBlossomBlock extends BaseEntityBlock {
 
     public static final EnumProperty<Direction> FACING = BlockStateProperties.FACING;
     public static final IntegerProperty POWER = IntegerProperty.create("power", 0, 15);
+
+    // animateTick fires ~once per 50 ticks for a given block; the client ticker fires every tick.
+    // Divide particle count by this to keep the same effective spawn rate.
+    private static final double TICK_COMPENSATION = 50.0;
 
     public AdvancedCalibratedSporeBlossomBlock(Properties properties) {
         super(properties);
@@ -77,9 +84,11 @@ public class AdvancedCalibratedSporeBlossomBlock extends BaseEntityBlock {
 
     @Override
     public @Nullable <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
-        if (level.isClientSide()) return null;
-        return createTickerHelper(type, ModBlockEntities.ADVANCED_SPORE_BLOSSOM_BE,
-                (lvl, pos, st, be) -> be.incrementPulseTick());
+        if (level.isClientSide()) {
+            return createTickerHelper(type, ModBlockEntities.ADVANCED_SPORE_BLOSSOM_BE,
+                    AdvancedCalibratedSporeBlossomBlock::clientTick);
+        }
+        return null;
     }
 
     // --- Placement ---
@@ -146,31 +155,29 @@ public class AdvancedCalibratedSporeBlossomBlock extends BaseEntityBlock {
         }
     }
 
-    // --- Particles ---
+    // --- Particles (client-side block entity ticker) ---
 
-    @Override
-    public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
-        BlockEntity be = level.getBlockEntity(pos);
-        if (!(be instanceof AdvancedSporeBlossomBlockEntity advBe)) return;
+    private static void clientTick(Level level, BlockPos pos, BlockState state, AdvancedSporeBlossomBlockEntity advBe) {
+        RandomSource random = level.random;
 
         // Pulse check
-        if (!advBe.shouldEmit()) return;
+        if (advBe.getPulseMode() == 1) {
+            long tick = level.getGameTime() % advBe.getPulseInterval();
+            if (tick >= advBe.getPulseDuration()) return;
+        }
 
         int power = state.getValue(POWER);
         int redstoneMode = advBe.getRedstoneMode();
 
-        // Redstone application
         float effectiveDensity = advBe.getDensity();
         int effectiveXRadius = advBe.getXRadius();
         int effectiveYRadius = advBe.getYRadius();
         int effectiveZRadius = advBe.getZRadius();
 
         if (redstoneMode == 1) {
-            // Density mode: scale density by power
             effectiveDensity = (power / 15.0f) * advBe.getDensity();
             if (power == 0) return;
         } else if (redstoneMode == 2) {
-            // Size mode: scale radii by power
             effectiveXRadius = Math.max(1, Math.round((power / 15.0f) * advBe.getXRadius()));
             effectiveYRadius = Math.max(1, Math.round((power / 15.0f) * advBe.getYRadius()));
             effectiveZRadius = Math.max(1, Math.round((power / 15.0f) * advBe.getZRadius()));
@@ -178,19 +185,43 @@ public class AdvancedCalibratedSporeBlossomBlock extends BaseEntityBlock {
         }
 
         int particleIdx = advBe.getParticleType();
-        ParticleOptions[] particles = ParticleTypeRegistry.getParticles(particleIdx);
         Direction facing = state.getValue(FACING);
 
+        ParticleOptions[] particles;
+        if (particleIdx == ParticleTypeRegistry.BLOCK_PARTICLE_INDEX) {
+            BlockPos attachedPos = pos.relative(facing.getOpposite());
+            BlockState attachedState = level.getBlockState(attachedPos);
+            if (attachedState.isAir()) {
+                attachedState = Blocks.STONE.defaultBlockState();
+            }
+            particles = new ParticleOptions[]{ new BlockParticleOption(ParticleTypes.BLOCK, attachedState) };
+        } else {
+            particles = ParticleTypeRegistry.getParticles(particleIdx);
+        }
+
         double volume = (double) effectiveXRadius * 2 * effectiveYRadius * 2 * effectiveZRadius * 2;
-        int count = Math.max(1, (int) (effectiveDensity * volume));
+        // Compensate: ticker fires every tick vs animateTick's sporadic calls
+        double rawCount = (effectiveDensity * volume) / TICK_COMPENSATION;
+        int count = (int) rawCount;
+        if (random.nextDouble() < (rawCount - count)) {
+            count++;
+        }
+        if (count <= 0) return;
 
         double cx = pos.getX() + 0.5;
         double cy = pos.getY() + 0.5;
         double cz = pos.getZ() + 0.5;
 
-        float vx = advBe.getVelocityX();
-        float vy = advBe.getVelocityY();
-        float vz = advBe.getVelocityZ();
+        float speed = advBe.getAnimationSpeed();
+        float vx = advBe.getVelocityX() * speed;
+        float vy = (advBe.getVelocityY() + advBe.getGravity()) * speed;
+        float vz = advBe.getVelocityZ() * speed;
+
+        int colorEnabled = advBe.getColorEnabled();
+        int colorR = advBe.getColorR();
+        int colorG = advBe.getColorG();
+        int colorB = advBe.getColorB();
+        float particleScale = advBe.getParticleScale();
 
         int emissionMode = advBe.getEmissionMode();
         float densityFalloff = advBe.getDensityFalloff();
@@ -200,12 +231,10 @@ public class AdvancedCalibratedSporeBlossomBlock extends BaseEntityBlock {
             double ox, oy, oz;
 
             if (randomness >= 1.0f) {
-                // Fully random
                 ox = (random.nextDouble() * 2 - 1) * effectiveXRadius;
                 oy = (random.nextDouble() * 2 - 1) * effectiveYRadius;
                 oz = (random.nextDouble() * 2 - 1) * effectiveZRadius;
             } else if (randomness <= 0.0f) {
-                // Uniform grid
                 int gridSize = Math.max(1, (int) Math.cbrt(count));
                 int gi = i % gridSize;
                 int gj = (i / gridSize) % gridSize;
@@ -214,7 +243,6 @@ public class AdvancedCalibratedSporeBlossomBlock extends BaseEntityBlock {
                 oy = ((gj + 0.5) / gridSize * 2 - 1) * effectiveYRadius;
                 oz = ((gk + 0.5) / gridSize * 2 - 1) * effectiveZRadius;
             } else {
-                // Interpolate between grid and random
                 int gridSize = Math.max(1, (int) Math.cbrt(count));
                 int gi = i % gridSize;
                 int gj = (i / gridSize) % gridSize;
@@ -230,7 +258,6 @@ public class AdvancedCalibratedSporeBlossomBlock extends BaseEntityBlock {
                 oz = gz + (rz - gz) * randomness;
             }
 
-            // Density falloff: weight toward center
             if (densityFalloff > 0.0f) {
                 double dist = Math.sqrt(
                         (ox * ox) / (effectiveXRadius * effectiveXRadius) +
@@ -248,28 +275,29 @@ public class AdvancedCalibratedSporeBlossomBlock extends BaseEntityBlock {
             BlockPos targetPos = BlockPos.containing(fx, fy, fz);
             BlockState targetState = level.getBlockState(targetPos);
 
-            // Emission mode filtering
             if (emissionMode == 0) {
-                // Everywhere: skip solid blocks
                 if (targetState.isCollisionShapeFullBlock(level, targetPos)) continue;
             } else if (emissionMode == 1) {
-                // Surfaces: block must be solid AND have at least one non-solid neighbor
                 if (!targetState.isCollisionShapeFullBlock(level, targetPos)) continue;
                 if (!hasNonSolidNeighbor(level, targetPos)) continue;
-                // Move particle to the non-solid neighbor face
                 Direction surfaceFace = findNonSolidNeighborFace(level, targetPos, random);
                 if (surfaceFace == null) continue;
                 fx = targetPos.getX() + 0.5 + surfaceFace.getStepX() * 0.51;
                 fy = targetPos.getY() + 0.5 + surfaceFace.getStepY() * 0.51;
                 fz = targetPos.getZ() + 0.5 + surfaceFace.getStepZ() * 0.51;
             } else if (emissionMode == 2) {
-                // Empty on Surface: block must be air/non-solid AND have at least one solid neighbor
                 if (targetState.isCollisionShapeFullBlock(level, targetPos)) continue;
                 if (!hasSolidNeighbor(level, targetPos)) continue;
             }
 
-            for (ParticleOptions particle : particles) {
-                level.addParticle(particle, fx, fy, fz, vx, vy, vz);
+            if (colorEnabled == 1) {
+                int color = (255 << 24) | (colorR << 16) | (colorG << 8) | colorB;
+                DustParticleOptions dust = new DustParticleOptions(color, particleScale);
+                level.addParticle(dust, fx, fy, fz, vx, vy, vz);
+            } else {
+                for (ParticleOptions particle : particles) {
+                    level.addParticle(particle, fx, fy, fz, vx, vy, vz);
+                }
             }
         }
     }

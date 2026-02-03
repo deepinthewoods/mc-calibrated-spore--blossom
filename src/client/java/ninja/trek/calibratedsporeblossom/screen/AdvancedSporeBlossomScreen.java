@@ -27,7 +27,7 @@ public class AdvancedSporeBlossomScreen extends AbstractContainerScreen<Advanced
 
     // Slider definitions: name, isFloat, min, max, floatMin, floatMax
     private static final SliderDef[] DEFS = {
-        new SliderDef("Particle Type", false, 0, 44, 0, 0),
+        new SliderDef("Particle Type", false, 0, ParticleTypeRegistry.COUNT - 1, 0, 0),
         new SliderDef("Density", true, 0, 0, 0.0f, 0.05f),
         new SliderDef("X Radius", false, 1, 64, 0, 0),
         new SliderDef("Y Radius", false, 1, 64, 0, 0),
@@ -148,6 +148,17 @@ public class AdvancedSporeBlossomScreen extends AbstractContainerScreen<Advanced
             rebuildSliders();
         }
         return true;
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        // Ensure widgets (sliders) receive drag events before container screen handling
+        if (this.getFocused() != null && this.isDragging() && button == 0) {
+            if (this.getFocused().mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
+                return true;
+            }
+        }
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
 
     @Override
